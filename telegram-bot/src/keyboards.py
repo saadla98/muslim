@@ -1,10 +1,10 @@
-"""لوحات الأزرار (Inline Keyboards) الخاصّة بالبوت.
+"""Inline keyboards used by the bot.
 
-مخطّط بيانات الأزرار (callback_data):
-    menu                 → القائمة الرئيسية
-    help                 → المساعدة
-    cat:<category_id>    → عرض مداخل تصنيف
-    ent:<category_id>:<entry_id>  → عرض ذكر/دعاء
+callback_data scheme:
+    menu                          -> main menu
+    help                          -> help
+    cat:<category_id>             -> show a category's entries
+    ent:<category_id>:<entry_id>  -> show a dhikr/du'a
 """
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from .data_loader import Category, Entry, get_categories
 
 
 def main_menu() -> InlineKeyboardMarkup:
-    """القائمة الرئيسية: زرّان في كل صفّ للتصنيفات."""
+    """Main menu: two category buttons per row."""
     cats = get_categories()
     rows: list[list[InlineKeyboardButton]] = []
     for i in range(0, len(cats), 2):
@@ -28,7 +28,7 @@ def main_menu() -> InlineKeyboardMarkup:
 
 
 def category_menu(category: Category, entries: list[Entry]) -> InlineKeyboardMarkup:
-    """قائمة مداخل تصنيف: زرّ لكل ذكر/دعاء، ثم زرّ الرجوع."""
+    """Category menu: one button per entry, then a back button."""
     rows = [
         [InlineKeyboardButton(e.title, callback_data=f"ent:{e.category_id}:{e.id}")]
         for e in entries
@@ -38,7 +38,7 @@ def category_menu(category: Category, entries: list[Entry]) -> InlineKeyboardMar
 
 
 def entry_nav(entry: Entry) -> InlineKeyboardMarkup:
-    """أزرار التنقّل أسفل ذكر/دعاء."""
+    """Navigation buttons shown under a dhikr/du'a."""
     return InlineKeyboardMarkup(
         [
             [InlineKeyboardButton("⬅️ رجوع للتصنيف", callback_data=f"cat:{entry.category_id}")],
@@ -48,7 +48,7 @@ def entry_nav(entry: Entry) -> InlineKeyboardMarkup:
 
 
 def results_menu(entries: list[Entry]) -> InlineKeyboardMarkup:
-    """قائمة نتائج البحث كأزرار."""
+    """Search results as buttons."""
     rows = [
         [InlineKeyboardButton(f"{e.title}", callback_data=f"ent:{e.category_id}:{e.id}")]
         for e in entries

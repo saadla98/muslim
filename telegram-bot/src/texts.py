@@ -1,4 +1,4 @@
-"""نصوص الواجهة العربية وتنسيق الرسائل."""
+"""Arabic UI strings and message formatting."""
 from __future__ import annotations
 
 from html import escape
@@ -47,7 +47,7 @@ MULTIPLE_RESULTS = "🔎 وجدت <b>{count}</b> نتيجة لـ «<b>{query}</b
 
 
 def format_entry(entry: Entry, category: Category | None = None) -> str:
-    """تنسيق ذكر/دعاء كرسالة HTML."""
+    """Format a dhikr/du'a as an HTML message."""
     header = f"{category.emoji} " if category else "📿 "
     parts = [f"{header}<b>{escape(entry.title)}</b>", "", f"<code>{escape(entry.text)}</code>"]
 

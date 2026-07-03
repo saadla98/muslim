@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""نقطة تشغيل بوت الأذكار والأدعية.
+"""Entry point for the adhkar & du'a Telegram bot.
 
-الاستخدام:
+Usage:
     python run.py
 """
 from src.bot import main

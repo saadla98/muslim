@@ -1,4 +1,4 @@
-"""معالج ضغطات الأزرار (CallbackQuery)."""
+"""Button (CallbackQuery) handler."""
 from __future__ import annotations
 
 import logging
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    await query.answer()  # إزالة مؤشّر التحميل
+    await query.answer()  # clear the loading spinner
     data = query.data or ""
 
     if data == "menu":
@@ -59,4 +59,4 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         )
         return
 
-    logger.warning("callback_data غير معروف: %s", data)
+    logger.warning("Unknown callback_data: %s", data)

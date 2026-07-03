@@ -1,4 +1,4 @@
-"""تحميل بيانات الأذكار والأدعية من ملفّات JSON، مع فهرسة وبحث عربي مرِن."""
+"""Load adhkar & du'a data from JSON files, with indexing and flexible Arabic search."""
 from __future__ import annotations
 
 import json
@@ -12,31 +12,54 @@ from .config import DATA_DIR
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# تطبيع النص العربي للبحث (إزالة التشكيل وتوحيد الحروف)
+# Arabic text normalization for search (strip diacritics, unify letters)
 # ---------------------------------------------------------------------------
-_DIACRITICS = re.compile(r"[ؗ-ًؚ-ْٰـ]")  # تشكيل + تطويل
+# The character class is built from explicit codepoint ranges (not literal
+# diacritics) so it can only ever cover combining marks / tatweel, never the
+# Arabic base letters (U+0621-U+064A) or the Arabic-Indic digits (U+0660-U+0669).
+_DIACRITIC_RANGES = (
+    (0x0610, 0x061A),  # honorific / Quranic signs
+    (0x0640, 0x0640),  # tatweel (kashida)
+    (0x064B, 0x065F),  # harakat and combining marks
+    (0x0670, 0x0670),  # superscript alef
+    (0x06D6, 0x06ED),  # Quranic annotation marks
+)
+_DIACRITICS = re.compile(
+    "[" + "".join(f"{chr(lo)}-{chr(hi)}" for lo, hi in _DIACRITIC_RANGES) + "]"
+)
+
+# Letter-unification map applied after diacritics are stripped.
+# Keys/values are common base letters, which round-trip reliably.
+_UNIFY_TABLE = str.maketrans(
+    {
+        "أ": "ا",  # ALEF WITH HAMZA ABOVE -> ALEF
+        "إ": "ا",  # ALEF WITH HAMZA BELOW -> ALEF
+        "آ": "ا",  # ALEF WITH MADDA       -> ALEF
+        "ى": "ي",  # ALEF MAKSURA          -> YEH
+        "ة": "ه",  # TEH MARBUTA           -> HEH
+        "ؤ": "و",  # WAW WITH HAMZA        -> WAW
+        "ئ": "ي",  # YEH WITH HAMZA        -> YEH
+    }
+)
 
 
 def normalize(text: str) -> str:
-    """توحيد النص العربي: إزالة التشكيل والتطويل وتوحيد الهمزات والتاء المربوطة."""
+    """Normalize Arabic text: strip diacritics/tatweel, unify hamza and ta-marbuta."""
     if not text:
         return ""
     text = _DIACRITICS.sub("", text)
-    text = (
-        text.replace("أ", "ا").replace("إ", "ا").replace("آ", "ا")
-        .replace("ى", "ي").replace("ة", "ه").replace("ؤ", "و").replace("ئ", "ي")
-    )
-    # إزالة علامات الترقيم والرموز مع إبقاء الحروف والأرقام والمسافات
+    text = text.translate(_UNIFY_TABLE)
+    # Drop punctuation/symbols, keep letters, digits and spaces
     text = re.sub(r"[^\w\s]", " ", text)
     return re.sub(r"\s+", " ", text).strip().lower()
 
 
 # ---------------------------------------------------------------------------
-# نماذج البيانات
+# Data models
 # ---------------------------------------------------------------------------
 @dataclass(frozen=True)
 class Entry:
-    """ذكر أو دعاء واحد."""
+    """A single dhikr or du'a."""
     id: str
     category_id: str
     title: str
@@ -48,12 +71,12 @@ class Entry:
 
     @property
     def uid(self) -> str:
-        """معرّف فريد عبر كل التصنيفات (يُستعمل في أزرار البوت)."""
+        """Unique id across all categories (used in bot buttons)."""
         return f"{self.category_id}:{self.id}"
 
     @property
     def search_blob(self) -> str:
-        """النص المُطبَّع المستعمَل في المطابقة."""
+        """Normalized text used for matching."""
         return normalize(" ".join([self.title, *self.keywords]))
 
 
@@ -67,7 +90,7 @@ class Category:
 
 
 # ---------------------------------------------------------------------------
-# التحميل
+# Loading
 # ---------------------------------------------------------------------------
 def _read_json(name: str):
     path = DATA_DIR / name
@@ -77,7 +100,7 @@ def _read_json(name: str):
 
 @lru_cache(maxsize=1)
 def _load() -> tuple[list[Category], dict[str, list[Entry]]]:
-    """تحميل التصنيفات وكل المداخل (مع التخزين المؤقّت)."""
+    """Load categories and all entries (cached)."""
     raw_categories = _read_json("categories.json")
     categories: list[Category] = []
     entries_by_cat: dict[str, list[Entry]] = {}
@@ -86,7 +109,7 @@ def _load() -> tuple[list[Category], dict[str, list[Entry]]]:
         category = Category(
             id=c["id"],
             title=c["title"],
-            emoji=c.get("emoji", "📿"),
+            emoji=c.get("emoji", "\U0001F4FF"),
             command=c.get("command", c["id"]),
             keywords=tuple(c.get("keywords", [])),
         )
@@ -108,12 +131,12 @@ def _load() -> tuple[list[Category], dict[str, list[Entry]]]:
         ]
 
     total = sum(len(v) for v in entries_by_cat.values())
-    logger.info("تم تحميل %d تصنيف و%d ذكر/دعاء.", len(categories), total)
+    logger.info("Loaded %d categories and %d adhkar/du'as.", len(categories), total)
     return categories, entries_by_cat
 
 
 # ---------------------------------------------------------------------------
-# واجهة الاستعلام
+# Query API
 # ---------------------------------------------------------------------------
 def get_categories() -> list[Category]:
     return _load()[0]
@@ -139,7 +162,7 @@ def get_entry(category_id: str, entry_id: str) -> Entry | None:
 
 
 def find_category_by_query(query: str) -> Category | None:
-    """مطابقة نصّ المستخدم مع اسم تصنيف (مثال: 'أذكار الصباح')."""
+    """Match user text against a category title (e.g. the morning-adhkar name)."""
     q = normalize(query)
     if not q:
         return None
@@ -151,13 +174,13 @@ def find_category_by_query(query: str) -> Category | None:
 
 
 def blob_contains_query(blob: str, q: str) -> bool:
-    """هل كل كلمات الاستعلام موجودة في النص؟"""
+    """Are all query words present in the blob?"""
     words = q.split()
     return bool(words) and all(w in blob for w in words)
 
 
 def search_scored(query: str, limit: int = 12) -> list[tuple[int, Entry]]:
-    """بحث مرِن: يُرجِع أزواج (النقاط، المدخل) مرتّبة حسب قوّة المطابقة."""
+    """Flexible search: return (score, entry) pairs sorted by match strength."""
     q = normalize(query)
     if not q:
         return []
@@ -170,26 +193,26 @@ def search_scored(query: str, limit: int = 12) -> list[tuple[int, Entry]]:
 
         score = 0
         if q == norm_title or q in norm_keywords:
-            score = 100                       # مطابقة تامّة
+            score = 100                       # exact match
         elif q in blob:
-            score = 70                        # الاستعلام كسلسلة داخل النص
+            score = 70                        # query as a substring of the blob
         elif blob_contains_query(blob, q):
-            score = 50                        # كل كلمات الاستعلام موجودة
+            score = 50                        # all query words present
         else:
-            # مطابقة جزئية: نسبة الكلمات الموجودة
+            # partial match: how many query words are present
             words = q.split()
             hits = sum(1 for w in words if w in blob)
             if hits:
                 score = 20 + hits
 
         if score:
-            if q in norm_title:               # ترجيح المطابقة في العنوان
+            if q in norm_title:               # boost matches in the title
                 score += 10
             scored.append((score, e))
 
     scored.sort(key=lambda x: (-x[0], len(x[1].title)))
 
-    # عند وجود مطابقة قويّة، احذف المطابقات الجزئية الضعيفة (تقليل الضجيج)
+    # With a strong match present, drop weak partial matches to cut noise
     if scored and scored[0][0] >= 70:
         scored = [pair for pair in scored if pair[0] >= 40]
 
@@ -197,12 +220,12 @@ def search_scored(query: str, limit: int = 12) -> list[tuple[int, Entry]]:
 
 
 def search(query: str, limit: int = 12) -> list[Entry]:
-    """بحث مرِن: يُرجِع المداخل فقط مرتّبة حسب قوّة المطابقة."""
+    """Flexible search: return only the entries sorted by match strength."""
     return [e for _, e in search_scored(query, limit)]
 
 
 def is_confident_match(scored: list[tuple[int, Entry]]) -> bool:
-    """هل النتيجة الأولى إجابةٌ واضحة تُعرَض مباشرةً؟"""
+    """Is the top result a clear answer we can show directly?"""
     if not scored:
         return False
     top = scored[0][0]

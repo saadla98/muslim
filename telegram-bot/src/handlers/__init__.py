@@ -1,1 +1,1 @@
-"""معالجات البوت (أوامر، أزرار، بحث)."""
+"""Bot handlers (commands, callbacks, search)."""
