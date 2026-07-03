@@ -1,4 +1,4 @@
-"""بناء تطبيق البوت وتسجيل المعالجات وتشغيله."""
+"""Build the bot application, register handlers, and run it."""
 from __future__ import annotations
 
 import logging
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 async def _post_init(app: Application) -> None:
-    """ضبط قائمة الأوامر الظاهرة في تيليگرام."""
+    """Set the command list shown in the Telegram UI."""
     base = [
         BotCommand("start", "🕌 البداية"),
         BotCommand("menu", "📿 القائمة الرئيسية"),
@@ -34,11 +34,11 @@ async def _post_init(app: Application) -> None:
         BotCommand(c.command, f"{c.emoji} {c.title}") for c in get_categories()
     ]
     await app.bot.set_my_commands(base + cat_cmds)
-    logger.info("تم ضبط أوامر البوت.")
+    logger.info("Bot commands set.")
 
 
 async def _on_error(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logger.exception("خطأ أثناء المعالجة:", exc_info=context.error)
+    logger.exception("Error while handling update:", exc_info=context.error)
 
 
 def build_application() -> Application:
@@ -49,22 +49,22 @@ def build_application() -> Application:
         .build()
     )
 
-    # الأوامر الأساسية
+    # Core commands
     app.add_handler(CommandHandler("start", commands.start))
     app.add_handler(CommandHandler("help", commands.help_command))
     app.add_handler(CommandHandler("menu", commands.menu_command))
     app.add_handler(CommandHandler("search", commands.search_command))
 
-    # أوامر التصنيفات (مثال: /sabah /masaa ...)
+    # Category commands (e.g. /sabah /masaa ...)
     for category in get_categories():
         app.add_handler(
             CommandHandler(category.command, commands.make_category_command(category.id))
         )
 
-    # الأزرار
+    # Buttons
     app.add_handler(CallbackQueryHandler(on_callback))
 
-    # البحث بالكتابة (أي نصّ ليس أمرًا)
+    # Free-text search (any non-command text)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
 
     app.add_error_handler(_on_error)
@@ -76,7 +76,7 @@ def main() -> None:
     config.validate()
 
     app = build_application()
-    logger.info("🚀 انطلق البوت... (اضغط Ctrl+C للإيقاف)")
+    logger.info("🚀 Bot started... (press Ctrl+C to stop)")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 

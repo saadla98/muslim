@@ -1,4 +1,4 @@
-"""معالجات الأوامر: /start /help /menu /search + أوامر التصنيفات."""
+"""Command handlers: /start /help /menu /search + category commands."""
 from __future__ import annotations
 
 from telegram import Update
@@ -27,7 +27,7 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    # إن كتب المستخدم: /search كلمة  → ابحث مباشرةً
+    # If the user typed "/search <words>", search right away
     query = " ".join(context.args) if context.args else ""
     if query.strip():
         from .search import do_search
@@ -46,7 +46,7 @@ async def _send_category(update: Update, category: Category) -> None:
 
 
 def make_category_command(category_id: str):
-    """ينشئ معالج أمر مربوطًا بتصنيف معيّن (مثال: /sabah)."""
+    """Build a command handler bound to a specific category (e.g. /sabah)."""
 
     async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         category = get_category(category_id)

@@ -1,4 +1,4 @@
-"""البحث بالكتابة: يكتب المستخدم اسم دعاء/ذكر فيجيبه البوت."""
+"""Free-text search: the user types a du'a/dhikr name and the bot answers."""
 from __future__ import annotations
 
 from telegram import Update
@@ -16,11 +16,11 @@ from ..keyboards import category_menu, entry_nav, results_menu
 
 
 async def do_search(update: Update, query: str) -> None:
-    """المنطق الأساسي للبحث (يُستعمَل من النصّ ومن /search)."""
+    """Core search logic (used by both free text and /search)."""
     message = update.effective_message
     query = query.strip()
 
-    # 1) هل يطابق النصُّ اسمَ تصنيف كامل؟ (مثال: «أذكار الصباح»)
+    # 1) Does the text match a whole category name? (e.g. 'أذكار الصباح')
     category = find_category_by_query(query)
     if category:
         entries = get_entries(category.id)
@@ -28,7 +28,7 @@ async def do_search(update: Update, query: str) -> None:
         await message.reply_html(title, reply_markup=category_menu(category, entries))
         return
 
-    # 2) بحث في المداخل
+    # 2) Search the entries
     scored = search_scored(query)
 
     if not scored:
@@ -37,7 +37,7 @@ async def do_search(update: Update, query: str) -> None:
 
     results = [e for _, e in scored]
 
-    # نتيجة واحدة أو مطابقة واثقة → اعرض الدعاء مباشرةً
+    # Single result or a confident match -> show the du'a directly
     if len(results) == 1 or is_confident_match(scored):
         entry = results[0]
         cat = get_category(entry.category_id)
@@ -46,7 +46,7 @@ async def do_search(update: Update, query: str) -> None:
         )
         return
 
-    # نتائج متعدّدة → اعرضها كأزرار
+    # Multiple results -> show them as buttons
     await message.reply_html(
         texts.MULTIPLE_RESULTS.format(count=len(results), query=query),
         reply_markup=results_menu(results),
