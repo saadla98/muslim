@@ -13,21 +13,26 @@ from telegram.ext import (
     filters,
 )
 
-from . import config
+from . import config, reminders, storage
 from .data_loader import get_categories
 from .handlers import commands
 from .handlers.callbacks import on_callback
+from .handlers.reminders import on_reminder_callback, tadkir_command
 from .handlers.search import on_text
 
 logger = logging.getLogger(__name__)
 
 
 async def _post_init(app: Application) -> None:
-    """Set the command list shown in the Telegram UI."""
+    """Load subscribers, schedule reminders, and set the command list."""
+    storage.load()
+    reminders.schedule(app)
+
     base = [
         BotCommand("start", "🕌 البداية"),
         BotCommand("menu", "📿 القائمة الرئيسية"),
         BotCommand("search", "🔎 البحث عن دعاء"),
+        BotCommand("tadkir", "⏰ التذكير التلقائي"),
         BotCommand("help", "ℹ️ المساعدة"),
     ]
     cat_cmds = [
@@ -54,6 +59,7 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("help", commands.help_command))
     app.add_handler(CommandHandler("menu", commands.menu_command))
     app.add_handler(CommandHandler("search", commands.search_command))
+    app.add_handler(CommandHandler("tadkir", tadkir_command))
 
     # Category commands (e.g. /sabah /masaa ...)
     for category in get_categories():
@@ -61,7 +67,8 @@ def build_application() -> Application:
             CommandHandler(category.command, commands.make_category_command(category.id))
         )
 
-    # Buttons
+    # Buttons — reminder toggles first (pattern), then the general handler
+    app.add_handler(CallbackQueryHandler(on_reminder_callback, pattern=r"^rem:"))
     app.add_handler(CallbackQueryHandler(on_callback))
 
     # Free-text search (any non-command text)

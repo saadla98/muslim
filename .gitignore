@@ -27,6 +27,7 @@ logs/
 *.pid
 *.sqlite3
 *.db
+subscribers.json
 
 # ===== Testing / coverage =====
 .pytest_cache/
