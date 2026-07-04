@@ -55,3 +55,23 @@ def results_menu(entries: list[Entry]) -> InlineKeyboardMarkup:
     ]
     rows.append([InlineKeyboardButton("🏠 القائمة الرئيسية", callback_data="menu")])
     return InlineKeyboardMarkup(rows)
+
+
+def open_category(category_id: str, label: str) -> InlineKeyboardMarkup:
+    """A single button that opens a category (used in reminder messages)."""
+    return InlineKeyboardMarkup(
+        [[InlineKeyboardButton(label, callback_data=f"cat:{category_id}")]]
+    )
+
+
+def reminders_menu(prefs: dict[str, bool]) -> InlineKeyboardMarkup:
+    """Toggle buttons for the automatic morning/evening reminders."""
+    morning = "✅" if prefs.get("morning") else "⬜"
+    evening = "✅" if prefs.get("evening") else "⬜"
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton(f"{morning} 🌅 تذكير أذكار الصباح", callback_data="rem:toggle:morning")],
+            [InlineKeyboardButton(f"{evening} 🌆 تذكير أذكار المساء", callback_data="rem:toggle:evening")],
+            [InlineKeyboardButton("🏠 القائمة الرئيسية", callback_data="menu")],
+        ]
+    )
