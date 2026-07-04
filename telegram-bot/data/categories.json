@@ -2,8 +2,10 @@
   { "id": "sabah",        "title": "أذكار الصباح",        "emoji": "🌅", "command": "sabah",    "file": "adhkar_sabah.json",        "keywords": ["اذكار الصباح", "الصباح", "ذكر الصباح", "sabah"] },
   { "id": "masaa",        "title": "أذكار المساء",        "emoji": "🌆", "command": "masaa",    "file": "adhkar_masaa.json",        "keywords": ["اذكار المساء", "المساء", "ذكر المساء", "masaa"] },
   { "id": "nawm",         "title": "أذكار النوم",         "emoji": "🌙", "command": "nawm",     "file": "adhkar_nawm.json",         "keywords": ["اذكار النوم", "النوم", "قبل النوم", "nawm"] },
-  { "id": "istiqadh",     "title": "أذكار الاستيقاظ",     "emoji": "☀️", "command": "istiqadh", "file": "adhkar_istiqadh.json",     "keywords": ["اذكار الاستيقاظ", "الاستيقاظ", "الصحو", "الصباح من النوم"] },
+  { "id": "istiqadh",     "title": "أذكار الاستيقاظ",     "emoji": "🌄", "command": "istiqadh", "file": "adhkar_istiqadh.json",     "keywords": ["اذكار الاستيقاظ", "الاستيقاظ", "الصحو", "الصباح من النوم"] },
+  { "id": "adhan",        "title": "أذكار الأذان",        "emoji": "📣", "command": "adhan",    "file": "adhkar_adhan.json",        "keywords": ["اذكار الاذان", "الاذان", "بعد الاذان", "دعاء الاذان", "الوسيلة"] },
   { "id": "salah",        "title": "أذكار بعد الصلاة",    "emoji": "🕌", "command": "salah",    "file": "adhkar_salah.json",        "keywords": ["اذكار بعد الصلاة", "بعد الصلاة", "دبر الصلاة", "الصلاة"] },
-  { "id": "yawmiyyah",    "title": "أدعية الحياة اليومية", "emoji": "🏠", "command": "yawmiyyah", "file": "adiyah_yawmiyyah.json",    "keywords": ["ادعية يومية", "الحياة اليومية", "المنزل", "الطعام", "الخلاء"] },
-  { "id": "mutafarriqah", "title": "أدعية متنوّعة",        "emoji": "🤲", "command": "adiyah",   "file": "adiyah_mutafarriqah.json", "keywords": ["ادعية متنوعة", "دعاء", "السفر", "الهم", "الكرب", "الاستخارة"] }
+  { "id": "yawmiyyah",    "title": "أدعية الحياة اليومية", "emoji": "🏠", "command": "yawmiyyah", "file": "adiyah_yawmiyyah.json",    "keywords": ["ادعية يومية", "الحياة اليومية", "المنزل", "الطعام", "الخلاء", "اللباس"] },
+  { "id": "quraniyyah",   "title": "أدعية من القرآن",      "emoji": "📖", "command": "quran",    "file": "adiyah_quraniyyah.json",   "keywords": ["ادعية قرانية", "من القران", "دعاء قراني", "ربنا", "ربنا اتنا"] },
+  { "id": "mutafarriqah", "title": "أدعية متنوّعة",        "emoji": "🤲", "command": "adiyah",   "file": "adiyah_mutafarriqah.json", "keywords": ["ادعية متنوعة", "دعاء", "السفر", "الهم", "الكرب", "الاستخارة", "المريض"] }
 ]
