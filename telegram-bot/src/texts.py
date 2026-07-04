@@ -46,10 +46,22 @@ NOT_FOUND = (
 MULTIPLE_RESULTS = "🔎 وجدت <b>{count}</b> نتيجة لـ «<b>{query}</b>». اختر واحدة:"
 
 
+_DIVIDER = "➖➖➖➖➖➖➖➖➖➖"
+
+
 def format_entry(entry: Entry, category: Category | None = None) -> str:
-    """Format a dhikr/du'a as an HTML message."""
+    """Format a dhikr/du'a as a clean HTML message.
+
+    Layout: title, the du'a text inside a blockquote, then a divider and the
+    metadata (repeat count, virtue, source).
+    """
     header = f"{category.emoji} " if category else "📿 "
-    parts = [f"{header}<b>{escape(entry.title)}</b>", "", f"<code>{escape(entry.text)}</code>"]
+    # The du'a text goes in a blockquote so it stands out clearly.
+    parts = [
+        f"{header}<b>{escape(entry.title)}</b>",
+        "",
+        f"<blockquote>{escape(entry.text)}</blockquote>",
+    ]
 
     meta = []
     if entry.repeat:
@@ -60,6 +72,7 @@ def format_entry(entry: Entry, category: Category | None = None) -> str:
         meta.append(f"📚 <b>المصدر:</b> <i>{escape(entry.reference)}</i>")
     if meta:
         parts.append("")
+        parts.append(_DIVIDER)
         parts.extend(meta)
 
     return "\n".join(parts)
