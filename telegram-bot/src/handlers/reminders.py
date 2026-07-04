@@ -8,6 +8,7 @@ from telegram.ext import ContextTypes
 
 from .. import config, storage
 from ..keyboards import reminders_menu
+from .callbacks import safe_answer
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ async def on_reminder_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         storage.set_pref(chat_id, kind, new_value)
 
         state = "تم تفعيل" if new_value else "تم إيقاف"
-        await query.answer(f"{state} تذكير {_KIND_LABEL[kind]}")
+        await safe_answer(query, f"{state} تذكير {_KIND_LABEL[kind]}")
 
         prefs = storage.get_prefs(chat_id)
         await query.edit_message_text(
@@ -56,4 +57,4 @@ async def on_reminder_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         )
         return
 
-    await query.answer()
+    await safe_answer(query)

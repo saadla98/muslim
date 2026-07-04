@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from telegram import Update
+from telegram.error import BadRequest
 from telegram.ext import ContextTypes
 
 from .. import texts
@@ -13,9 +14,21 @@ from ..keyboards import category_menu, entry_nav, main_menu
 logger = logging.getLogger(__name__)
 
 
+async def safe_answer(query, *args, **kwargs) -> None:
+    """Answer a callback query, ignoring 'query is too old' errors.
+
+    Happens when a button is pressed while the bot is offline: on restart the
+    callback id has already expired, so answering it is harmless to skip.
+    """
+    try:
+        await query.answer(*args, **kwargs)
+    except BadRequest as exc:
+        logger.debug("Ignoring stale callback answer: %s", exc)
+
+
 async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    await query.answer()  # clear the loading spinner
+    await safe_answer(query)  # clear the loading spinner
     data = query.data or ""
 
     if data == "menu":
