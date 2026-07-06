@@ -79,6 +79,43 @@ def format_entry(entry: Entry, category: Category | None = None) -> str:
     return "\n".join(parts)
 
 
+_MAX_CHUNK = 3800  # stay safely under Telegram's 4096-char message limit
+
+
+def format_all(category: Category, entries: list[Entry]) -> list[str]:
+    """Render a whole category as one or more messages (split to fit Telegram).
+
+    Each entry shows its number, title, text (blockquote) and source. The list
+    is split into chunks so no single message exceeds the size limit.
+    """
+    header = f"{category.emoji} <b>{escape(category.title)}</b> — كل الأذكار ({len(entries)})"
+
+    blocks: list[str] = []
+    for i, e in enumerate(entries, 1):
+        parts = [
+            f"<b>{i}. {escape(e.title)}</b>",
+            f"<blockquote>{escape(e.text)}</blockquote>",
+        ]
+        if e.repeat:
+            parts.append(f"🔁 {escape(e.repeat)}")
+        if e.reference:
+            parts.append(f"📚 <i>{escape(e.reference)}</i>")
+        blocks.append("\n".join(parts))
+
+    chunks: list[str] = []
+    current = header
+    for block in blocks:
+        candidate = f"{current}\n\n{_DIVIDER}\n\n{block}"
+        if len(candidate) > _MAX_CHUNK and current:
+            chunks.append(current)
+            current = block
+        else:
+            current = candidate
+    if current:
+        chunks.append(current)
+    return chunks
+
+
 def format_help() -> str:
     from .data_loader import get_categories
 
