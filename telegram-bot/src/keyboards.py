@@ -28,8 +28,11 @@ def main_menu() -> InlineKeyboardMarkup:
 
 
 def category_menu(category: Category, entries: list[Entry]) -> InlineKeyboardMarkup:
-    """Category menu: one button per entry, then a back button."""
+    """Category menu: a 'show all' button on top, then one button per entry."""
     rows = [
+        [InlineKeyboardButton("📜 عرض الكل في رسالة واحدة", callback_data=f"all:{category.id}")]
+    ]
+    rows += [
         [InlineKeyboardButton(e.title, callback_data=f"ent:{e.category_id}:{e.id}")]
         for e in entries
     ]
@@ -37,14 +40,19 @@ def category_menu(category: Category, entries: list[Entry]) -> InlineKeyboardMar
     return InlineKeyboardMarkup(rows)
 
 
-def entry_nav(entry: Entry) -> InlineKeyboardMarkup:
-    """Navigation buttons shown under a dhikr/du'a."""
+def nav_buttons(category_id: str) -> InlineKeyboardMarkup:
+    """Back-to-category and back-to-menu buttons."""
     return InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("⬅️ رجوع للتصنيف", callback_data=f"cat:{entry.category_id}")],
+            [InlineKeyboardButton("⬅️ رجوع للتصنيف", callback_data=f"cat:{category_id}")],
             [InlineKeyboardButton("🏠 القائمة الرئيسية", callback_data="menu")],
         ]
     )
+
+
+def entry_nav(entry: Entry) -> InlineKeyboardMarkup:
+    """Navigation buttons shown under a dhikr/du'a."""
+    return nav_buttons(entry.category_id)
 
 
 def results_menu(entries: list[Entry]) -> InlineKeyboardMarkup:

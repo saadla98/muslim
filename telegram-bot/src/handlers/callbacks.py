@@ -9,7 +9,7 @@ from telegram.ext import ContextTypes
 
 from .. import texts
 from ..data_loader import get_category, get_entries, get_entry
-from ..keyboards import category_menu, entry_nav, main_menu
+from ..keyboards import category_menu, entry_nav, main_menu, nav_buttons
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +52,26 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await query.edit_message_text(
             title, parse_mode="HTML", reply_markup=category_menu(category, entries)
         )
+        return
+
+    if data.startswith("all:"):
+        category_id = data[len("all:") :]
+        category = get_category(category_id)
+        if not category:
+            await query.edit_message_text("⚠️ تصنيف غير موجود.")
+            return
+        entries = get_entries(category_id)
+        chunks = texts.format_all(category, entries)
+        chat_id = query.message.chat_id
+        # Send each chunk as a new message; the last one carries the nav buttons.
+        for index, chunk in enumerate(chunks):
+            is_last = index == len(chunks) - 1
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=chunk,
+                parse_mode="HTML",
+                reply_markup=nav_buttons(category_id) if is_last else None,
+            )
         return
 
     if data.startswith("ent:"):
